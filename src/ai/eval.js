@@ -285,10 +285,15 @@ export default class Evaluate {
                   if (shape === shapes.BLOCK_FOUR && getAllShapesOfPoint(this.shapeCache, i, j, r).length === 1) continue;
                 }
               }
-              // 对面只防守，只考虑自己的冲四，活四，和对方的活三
+              // 对面（防守方）：考虑自己的冲四/活四/成五、对方的活三/冲四/活四，
+              // 以及自己的活三（反威胁 counter-threat，用于抢先成五）。
               else {
                 if (shape !== shapes.THREE && !isFour(shape) && !isFive(shape)) continue;
-                if (shape === shapes.THREE && r === -first) continue; // 不考虑防守方的活三
+                // 防守方自己的活三只有构成反威胁（counter-threat）时才保留，否则攻方 VCT 会漏掉
+                // “防守方抢先成五”的线，导致“必胜”误判（例如黑 [5,9] 反击）。
+                // 孤立活三（该点仅一个 THREE，无眠三/冲四/双三）不是立即威胁，剪掉以压最坏耗时；
+                // 复合威胁（活三+眠三/冲四、四三、双三）必须保留。
+                if (shape === shapes.THREE && r === -first && getAllShapesOfPoint(this.shapeCache, i, j, r).length === 1) continue;
                 if (depth > 1) {
                   // 有损剪枝，如果单纯冲四无法和任何棋子联系在一起，则直接剪掉
                   if (shape === shapes.BLOCK_FOUR && getAllShapesOfPoint(this.shapeCache, i, j).length === 1) continue;
